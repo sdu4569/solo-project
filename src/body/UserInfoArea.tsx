@@ -1,11 +1,28 @@
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { auth } from '../firebase';
+import { signOut } from 'firebase/auth';
+import { useEffect } from 'react';
 
 const UserInfoArea = () => {
   const user = auth.currentUser;
 
   if (user) {
+    useEffect(() => {
+      const LogOut = document.getElementById('LogOut') as HTMLElement;
+      console.log(LogOut);
+      if (LogOut) {
+        LogOut.addEventListener('click', async (event: any) => {
+          event.preventDefault();
+
+          await signOut(auth).then(async () => {
+            alert('로그아웃 되었습니다.');
+            window.location.href = '/';
+          });
+        });
+      }
+    }, []);
+
     const photo = user.photoURL;
     let date = new Date(user.metadata.creationTime as string);
 
