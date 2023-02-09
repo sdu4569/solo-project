@@ -1,6 +1,28 @@
 import styled from 'styled-components';
-
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase';
+import { useEffect } from 'react';
 const LoginPage = () => {
+  useEffect(() => {
+    const signInForm = document.getElementById('signInForm') as HTMLElement;
+    signInForm.addEventListener('submit', async (event: any) => {
+      event.preventDefault();
+      const email = event.target['userEmail'].value;
+      const password = event.target['userPassword'].value;
+
+      const user = await signInWithEmailAndPassword(auth, email, password)
+        .then(async (userCredential) => {
+          const user = userCredential.user;
+          alert('로그인 성공');
+          history.back();
+        })
+        .catch(() => {
+          alert('로그인 실패');
+          // ..
+        });
+    });
+  }, []);
+
   return (
     <Content>
       <h2>Login</h2>
