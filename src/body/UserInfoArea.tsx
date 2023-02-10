@@ -86,6 +86,8 @@ const LogInUserInfo = styled.div`
     margin-left: 10px;
     margin-top: 25px;
     border-radius: 50%;
+    width: 60px;
+    height: 60px;
   }
 
   & .nickName {
