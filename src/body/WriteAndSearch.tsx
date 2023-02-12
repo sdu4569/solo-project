@@ -32,7 +32,12 @@ const WriteAndSearch = () => {
         글쓰기
       </Write>
       <SearchForm onSubmit={onSubmit}>
-        <Search value={value} onChange={onChange} type="text" />
+        <Search
+          value={value}
+          onChange={onChange}
+          type="text"
+          placeholder="검색"
+        />
         <SearchButton type="button">검색</SearchButton>
       </SearchForm>
     </WriteSearch>
