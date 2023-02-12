@@ -7,10 +7,9 @@ import { useEffect } from 'react';
 const UserInfoArea = () => {
   const user = auth.currentUser;
 
-  if (user) {
+  if (user !== null) {
     useEffect(() => {
       const LogOut = document.getElementById('LogOut') as HTMLElement;
-      console.log(LogOut);
       if (LogOut) {
         LogOut.addEventListener('click', async (event: any) => {
           event.preventDefault();

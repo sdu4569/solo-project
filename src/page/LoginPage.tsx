@@ -5,7 +5,7 @@ import {
   signInWithPopup,
 } from 'firebase/auth';
 import { auth } from '../firebase';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const LoginPage = () => {
   useEffect(() => {
@@ -15,9 +15,10 @@ const LoginPage = () => {
       const email = event.target['userEmail'].value;
       const password = event.target['userPassword'].value;
 
-      const user = await signInWithEmailAndPassword(auth, email, password)
+      await signInWithEmailAndPassword(auth, email, password)
         .then(async (userCredential) => {
           const user = userCredential.user;
+          console.log(user);
           alert('로그인 성공');
           history.back();
         })
@@ -28,7 +29,7 @@ const LoginPage = () => {
     });
   }, []);
 
-  const onSocialLogin = async (evt: any) => {
+  const onSocialLogin = async () => {
     const provider = new GoogleAuthProvider();
     await signInWithPopup(auth, provider);
     alert('로그인 성공');

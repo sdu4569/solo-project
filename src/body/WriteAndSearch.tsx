@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
+import { auth } from '../firebase';
 
 const WriteAndSearch = () => {
   const [value, setValue] = useState('');
+  const user = auth.currentUser;
   const onChange = (event: React.FormEvent<HTMLInputElement>) => {
     const {
       currentTarget: { value },
@@ -13,14 +15,22 @@ const WriteAndSearch = () => {
 
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log(value);
+  };
+
+  const handleClick = () => {
+    if (user == null) {
+      alert('회원만이 글을 쓸 수 있습니다.');
+      window.location.href = '/login';
+    } else {
+      window.location.href = '/write';
+    }
   };
 
   return (
     <WriteSearch>
-      <Link to={'/write'}>
-        <Write type="button">글쓰기</Write>
-      </Link>
+      <Write type="button" onClick={handleClick}>
+        글쓰기
+      </Write>
       <SearchForm onSubmit={onSubmit}>
         <Search value={value} onChange={onChange} type="text" />
         <SearchButton type="button">검색</SearchButton>

@@ -23,10 +23,10 @@ const PageNavigator = () => {
       <Route path="/board/snack" element={<PersonalSnackPage />} />
       <Route path="/board/solution" element={<PersonalSolutionPage />} />
       <Route path="/board/suggest" element={<SuggestPage />} />
+      <Route path="/board/:id" element={<PostDetailPage />} />
       <Route path="/write" element={<WritePage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignUpPage />} />
-      <Route path="/board/:id" element={<PostDetailPage />} />
     </Routes>
   );
 };
