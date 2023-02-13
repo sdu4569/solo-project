@@ -20,7 +20,7 @@ const NoticeBoardPage = () => {
         };
         setContents((prev) =>
           [contentObject, ...prev].filter(
-            (content) => content.category == 'notice',
+            (content) => content.category == '공지사항',
           ),
         );
       });
@@ -28,7 +28,6 @@ const NoticeBoardPage = () => {
     getContents();
   }, []);
 
-  console.log(contents);
   return (
     <Content>
       <SideArea>

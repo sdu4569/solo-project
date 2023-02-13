@@ -1,7 +1,9 @@
 import styled from 'styled-components';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
+import { addDoc, collection, getDocs, query } from '@firebase/firestore';
+
 const SignUpPage = () => {
   useEffect(() => {
     const signUpForm = document.getElementById('signUpForm') as HTMLElement;
@@ -11,12 +13,13 @@ const SignUpPage = () => {
       const nickname = event.target['signUpNickname'].value;
       const password = event.target['signUpPassword'].value;
 
-      const user = await createUserWithEmailAndPassword(auth, email, password)
+      await createUserWithEmailAndPassword(auth, email, password)
         .then(async (userCredential) => {
           const user = userCredential.user;
           await updateProfile(user, {
             displayName: nickname,
-            photoURL: 'https://via.placeholder.com/60',
+            photoURL:
+              'https://as2.ftcdn.net/v2/jpg/02/29/75/83/1000_F_229758328_7x8jwCwjtBMmC6rgFzLFhZoEpLobB6L8.jpg',
           });
           alert('회원가입이 완료됐습니다.');
           history.back();

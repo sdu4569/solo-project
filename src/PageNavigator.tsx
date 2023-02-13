@@ -10,6 +10,7 @@ import PostDetailPage from './page/PostDetailPage';
 import SignUpPage from './page/SignUpPage';
 import SuggestPage from './page/SuggestPage';
 import TotalBoardPage from './page/TotalBoardPage';
+import UpdatePage from './page/UpdatePage';
 import WritePage from './page/WritePage';
 
 const PageNavigator = () => {
@@ -25,6 +26,7 @@ const PageNavigator = () => {
       <Route path="/board/suggest" element={<SuggestPage />} />
       <Route path="/board/:id" element={<PostDetailPage />} />
       <Route path="/write" element={<WritePage />} />
+      <Route path="/update/:id" element={<UpdatePage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignUpPage />} />
     </Routes>

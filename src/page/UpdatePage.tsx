@@ -1,16 +1,24 @@
 import { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { auth, db } from '../firebase';
-import { addDoc, collection, getDocs, query } from '@firebase/firestore';
+import {
+  updateDoc,
+  collection,
+  getDocs,
+  query,
+  doc,
+} from '@firebase/firestore';
+import { useParams } from 'react-router-dom';
 
-const WritePage = () => {
+const UpdatePage = () => {
+  let number = useParams();
   const user = auth.currentUser;
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('default');
+  const [category, setCategory] = useState('');
   const [content, setContent] = useState('');
-  const [num, setNum] = useState(0);
   const [value, setValue] = useState<String>();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const [contents, setContents] = useState<any[]>([]);
 
   const onChangeTitle = (e: React.ChangeEvent<HTMLInputElement>) => {
     const {
@@ -36,27 +44,38 @@ const WritePage = () => {
 
   useEffect(() => {
     const getContents = async () => {
-      const q = query(collection(db, 'board'));
-      const dbContents = await getDocs(q);
-      setNum(dbContents.docs.length + 1);
+      const qBoard = query(collection(db, 'board'));
+      const dbContents = await getDocs(qBoard);
+      dbContents.forEach((doc) => {
+        const contentObject = {
+          ...doc.data(),
+          id: doc.id,
+        };
+        setContents((prev) =>
+          [contentObject, ...prev].filter((content) => content.no == number.id),
+        );
+      });
+      console.log(contents);
     };
     getContents();
   }, []);
-
+  useEffect(() => {
+    if (contents.length !== 0) {
+      setCategory(contents[0].category);
+      setTitle(contents[0].title);
+      setContent(contents[0].content);
+    }
+  }, [contents]);
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (category !== 'default' && user !== null) {
-      await addDoc(collection(db, 'board'), {
-        no: num,
+      const docRef = doc(db, 'board', contents[0].id);
+      await updateDoc(docRef, {
         title: title,
         category: category,
         content: content,
-        time: Date.now(),
-        username: user.displayName,
-        thumbnail: user.photoURL,
-        userid: user.uid,
       });
-      alert('글이 작성되었습니다.');
+      alert('수정되었습니다');
       setTitle('');
       setCategory('');
       setContent('');
@@ -76,7 +95,7 @@ const WritePage = () => {
 
   return (
     <Content>
-      <h2>글쓰기</h2>
+      <h2>글수정</h2>
       <form method="post" onSubmit={onSubmit}>
         <Top>
           <Select
@@ -95,7 +114,7 @@ const WritePage = () => {
             <option value="건의게시판">건의게시판</option>
           </Select>
           <span className="button">추가</span>
-          <input type="submit" className="button" value="등록"></input>
+          <input type="submit" className="button" value="수정"></input>
         </Top>
         <Body>
           <input
@@ -190,4 +209,4 @@ const Body = styled.div`
   }
 `;
 
-export default WritePage;
+export default UpdatePage;

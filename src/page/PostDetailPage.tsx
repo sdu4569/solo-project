@@ -10,8 +10,10 @@ import {
   query,
   addDoc,
   orderBy,
+  deleteDoc,
+  doc,
 } from '@firebase/firestore';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 
 const PostDetailPage = () => {
   const user = auth.currentUser;
@@ -55,6 +57,7 @@ const PostDetailPage = () => {
       dbComments.forEach((doc) => {
         const commentObject = {
           ...doc.data(),
+          id: doc.id,
         };
         setComments((prev) =>
           [commentObject, ...prev].filter((comment) => comment.no == number.id),
@@ -89,6 +92,23 @@ const PostDetailPage = () => {
     setValue(value);
   };
 
+  const handleDelete = () => {
+    const delContent = confirm('글을 삭제하시겠습니까?');
+    if (delContent) {
+      contents.forEach(async (content) => {
+        await deleteDoc(doc(db, 'board', content.id));
+      });
+      comments.forEach(async (comment) => {
+        await deleteDoc(doc(db, 'comment', comment.id));
+      });
+
+      alert('글이 삭제되었습니다.');
+      window.history.back();
+    } else {
+      alert('취소되었습니다.');
+    }
+  };
+
   if (contents.length !== 0 && user !== null) {
     return (
       <Content>
@@ -113,116 +133,237 @@ const PostDetailPage = () => {
               ':' +
               date.getMinutes();
 
-            return (
-              <AirtlcleContent key={idx}>
-                <ArticleHeader>
-                  <ArticleTitle>
-                    <p className="category">{item.category} &gt;</p>
-                    <div className="title">
-                      <h3>{item.title}</h3>
-                    </div>
-                  </ArticleTitle>
-                  <WriterInfo>
-                    <div className="thumbArea">
-                      <img
-                        src={`${item.thumbnail}`}
-                        alt="프로필 사진"
-                        className="userThumb"
-                      />
-                    </div>
-                    <div className="profile">{item.username}</div>
-                    <div className="date">{dateFormat}</div>
-                  </WriterInfo>
-                </ArticleHeader>
-                <ArticleBody>
-                  <img
-                    src="https://via.placeholder.com/200"
-                    alt="첨부된 사진"
-                    className="photo"
-                  />
-                  <div className="content">{item.content}</div>
-                </ArticleBody>
-                <CommentBox>
-                  <div className="commentTitle">댓글 {comments.length}</div>
-                  <ul className="commentList">
-                    {comments.map<any>((item, idx) => {
-                      let date = new Date(item.time);
-                      let dateFormat =
-                        date.getFullYear() +
-                        '.' +
-                        (date.getMonth() + 1 <= 9
-                          ? '0' + (date.getMonth() + 1)
-                          : date.getMonth() + 1) +
-                        '.' +
-                        (date.getDate() <= 9
-                          ? '0' + date.getDate()
-                          : date.getDate()) +
-                        '.' +
-                        date.getHours() +
-                        ':' +
-                        date.getMinutes();
-                      return (
-                        <li className="commentItem" key={idx}>
-                          <div className="commentArea">
-                            <img
-                              src={item.thumbnail}
-                              alt="프로필 사진"
-                              className="userThumb"
-                            />
-                            <div className="commentBox">
-                              <div className="commentNickname">
-                                {item.username}
+            if (item.userid === user.uid) {
+              return (
+                <AirtlcleContent key={idx}>
+                  <ArticleHeader>
+                    <ArticleTitle>
+                      <p className="category">{item.category} &gt;</p>
+                      <div className="title">
+                        <h3>{item.title}</h3>
+                      </div>
+                    </ArticleTitle>
+                    <WriterInfo>
+                      <div className="thumbArea">
+                        <img
+                          src={`${item.thumbnail}`}
+                          alt="프로필 사진"
+                          className="userThumb"
+                        />
+                      </div>
+                      <div className="profile">{item.username}</div>
+                      <div className="date">{dateFormat}</div>
+                    </WriterInfo>
+                  </ArticleHeader>
+                  <ArticleBody>
+                    <img
+                      src="https://via.placeholder.com/200"
+                      alt="첨부된 사진"
+                      className="photo"
+                    />
+                    <div className="content">{item.content}</div>
+                  </ArticleBody>
+                  <CommentBox>
+                    <div className="commentTitle">댓글 {comments.length}</div>
+                    <ul className="commentList">
+                      {comments.map<any>((item, idx) => {
+                        let date = new Date(item.time);
+                        let dateFormat =
+                          date.getFullYear() +
+                          '.' +
+                          (date.getMonth() + 1 <= 9
+                            ? '0' + (date.getMonth() + 1)
+                            : date.getMonth() + 1) +
+                          '.' +
+                          (date.getDate() <= 9
+                            ? '0' + date.getDate()
+                            : date.getDate()) +
+                          '.' +
+                          date.getHours() +
+                          ':' +
+                          date.getMinutes();
+                        return (
+                          <li className="commentItem" key={idx}>
+                            <div className="commentArea">
+                              <img
+                                src={item.thumbnail}
+                                alt="프로필 사진"
+                                className="userThumb"
+                              />
+                              <div className="commentBox">
+                                <div className="commentNickname">
+                                  {item.username}
+                                </div>
+                                <div className="commentTextbox">
+                                  <p className="commentTextView">
+                                    <span className="textComment">
+                                      {item.content}
+                                    </span>
+                                  </p>
+                                </div>
                               </div>
-                              <div className="commentTextbox">
-                                <p className="commentTextView">
-                                  <span className="textComment">
-                                    {item.content}
-                                  </span>
-                                </p>
+                              <div className="commentInfoBox">
+                                <span className="commentInfoDate">
+                                  {dateFormat}
+                                </span>
+                                <a
+                                  href="#"
+                                  role="button"
+                                  className="commentInfoButton"
+                                >
+                                  답글쓰기
+                                </a>
                               </div>
                             </div>
-                            <div className="commentInfoBox">
-                              <span className="commentInfoDate">
-                                {dateFormat}
-                              </span>
-                              <a
-                                href="#"
-                                role="button"
-                                className="commentInfoButton"
-                              >
-                                답글쓰기
-                              </a>
-                            </div>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
+                          </li>
+                        );
+                      })}
+                    </ul>
 
-                  <CommentWriter>
-                    <form method="post" onSubmit={onSubmit}>
-                      <div className="commentInbox">
-                        <p className="commentInboxName">{user.displayName}</p>
-                        <textarea
-                          ref={textareaRef}
-                          className="commentInboxText"
-                          placeholder="댓글을 남겨보세요"
-                          onChange={onChangeComment}
-                          required
-                        ></textarea>
+                    <CommentWriter>
+                      <form method="post" onSubmit={onSubmit}>
+                        <div className="commentInbox">
+                          <p className="commentInboxName">{user.displayName}</p>
+                          <textarea
+                            ref={textareaRef}
+                            className="commentInboxText"
+                            placeholder="댓글을 남겨보세요"
+                            onChange={onChangeComment}
+                            required
+                          ></textarea>
+                        </div>
+                        <div className="commentAttach">
+                          <input
+                            type="submit"
+                            className="registerButton"
+                            value="등록"
+                          ></input>
+                        </div>
+                      </form>
+                    </CommentWriter>
+                  </CommentBox>
+                  <UpdateAndDelete>
+                    <Link to={`/update/${number.id}`}>
+                      <button className="update">수정</button>
+                    </Link>
+                    <button className="delete" onClick={handleDelete}>
+                      삭제
+                    </button>
+                  </UpdateAndDelete>
+                </AirtlcleContent>
+              );
+            } else {
+              return (
+                <AirtlcleContent key={idx}>
+                  <ArticleHeader>
+                    <ArticleTitle>
+                      <p className="category">{item.category} &gt;</p>
+                      <div className="title">
+                        <h3>{item.title}</h3>
                       </div>
-                      <div className="commentAttach">
-                        <input
-                          type="submit"
-                          className="registerButton"
-                          value="등록"
-                        ></input>
+                    </ArticleTitle>
+                    <WriterInfo>
+                      <div className="thumbArea">
+                        <img
+                          src={`${item.thumbnail}`}
+                          alt="프로필 사진"
+                          className="userThumb"
+                        />
                       </div>
-                    </form>
-                  </CommentWriter>
-                </CommentBox>
-              </AirtlcleContent>
-            );
+                      <div className="profile">{item.username}</div>
+                      <div className="date">{dateFormat}</div>
+                    </WriterInfo>
+                  </ArticleHeader>
+                  <ArticleBody>
+                    <img
+                      src="https://via.placeholder.com/200"
+                      alt="첨부된 사진"
+                      className="photo"
+                    />
+                    <div className="content">{item.content}</div>
+                  </ArticleBody>
+                  <CommentBox>
+                    <div className="commentTitle">댓글 {comments.length}</div>
+                    <ul className="commentList">
+                      {comments.map<any>((item, idx) => {
+                        let date = new Date(item.time);
+                        let dateFormat =
+                          date.getFullYear() +
+                          '.' +
+                          (date.getMonth() + 1 <= 9
+                            ? '0' + (date.getMonth() + 1)
+                            : date.getMonth() + 1) +
+                          '.' +
+                          (date.getDate() <= 9
+                            ? '0' + date.getDate()
+                            : date.getDate()) +
+                          '.' +
+                          date.getHours() +
+                          ':' +
+                          date.getMinutes();
+                        return (
+                          <li className="commentItem" key={idx}>
+                            <div className="commentArea">
+                              <img
+                                src={item.thumbnail}
+                                alt="프로필 사진"
+                                className="userThumb"
+                              />
+                              <div className="commentBox">
+                                <div className="commentNickname">
+                                  {item.username}
+                                </div>
+                                <div className="commentTextbox">
+                                  <p className="commentTextView">
+                                    <span className="textComment">
+                                      {item.content}
+                                    </span>
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="commentInfoBox">
+                                <span className="commentInfoDate">
+                                  {dateFormat}
+                                </span>
+                                <a
+                                  href="#"
+                                  role="button"
+                                  className="commentInfoButton"
+                                >
+                                  답글쓰기
+                                </a>
+                              </div>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+
+                    <CommentWriter>
+                      <form method="post" onSubmit={onSubmit}>
+                        <div className="commentInbox">
+                          <p className="commentInboxName">{user.displayName}</p>
+                          <textarea
+                            ref={textareaRef}
+                            className="commentInboxText"
+                            placeholder="댓글을 남겨보세요"
+                            onChange={onChangeComment}
+                            required
+                          ></textarea>
+                        </div>
+                        <div className="commentAttach">
+                          <input
+                            type="submit"
+                            className="registerButton"
+                            value="등록"
+                          ></input>
+                        </div>
+                      </form>
+                    </CommentWriter>
+                  </CommentBox>
+                </AirtlcleContent>
+              );
+            }
           })}
         </MainArea>
       </Content>
@@ -435,6 +576,8 @@ const ArticleBody = styled.div`
 
   & .content {
     margin-top: 10px;
+    wrap: hard;
+    white-space: pre;
   }
 `;
 
@@ -579,6 +722,27 @@ const CommentWriter = styled.div`
     font-size: 13px;
     color: #b7b7b7;
     border: none;
+    cursor: pointer;
+    box-sizing: border-box;
+    font-weight: 400;
+    text-align: center;
+    vertical-align: top;
+    background: white;
+  }
+`;
+
+const UpdateAndDelete = styled.div`
+  display: flex;
+  justify-content: space-between;
+  width: 100px;
+
+  & .update,
+  .delete {
+    text-decoration: none;
+    display: inline-block;
+    min-width: 46px;
+    height: 34px;
+    font-size: 13px;
     cursor: pointer;
     box-sizing: border-box;
     font-weight: 400;
