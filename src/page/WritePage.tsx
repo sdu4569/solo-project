@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
-import { auth, db } from '../firebase';
+import { auth, db, storage } from '../firebase';
 import { addDoc, collection, getDocs, query } from '@firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 const WritePage = () => {
   const user = auth.currentUser;
@@ -9,7 +10,7 @@ const WritePage = () => {
   const [category, setCategory] = useState('default');
   const [content, setContent] = useState('');
   const [num, setNum] = useState(0);
-  const [value, setValue] = useState<String>();
+  const [value, setValue] = useState<String>('');
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const onChangeTitle = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,7 +46,15 @@ const WritePage = () => {
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (category !== 'default' && user !== null) {
+
+    if (category === 'default') {
+      return alert('게시판을 선택해 주세요');
+    }
+
+    const file: any = document.getElementById('file');
+    let fileInput = file.files[0];
+    console.log(fileInput);
+    if (fileInput === undefined && user !== null) {
       await addDoc(collection(db, 'board'), {
         no: num,
         title: title,
@@ -55,6 +64,7 @@ const WritePage = () => {
         username: user.displayName,
         thumbnail: user.photoURL,
         userid: user.uid,
+        image: '',
       });
       alert('글이 작성되었습니다.');
       setTitle('');
@@ -62,7 +72,67 @@ const WritePage = () => {
       setContent('');
       window.location.href = '/';
     } else {
-      alert('게시판을 선택해 주세요.');
+      const storageRef = ref(storage, 'image/' + fileInput.name);
+      const uploadTask = uploadBytesResumable(storageRef, fileInput);
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+          const progress =
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log('Upload is ' + progress + '% done');
+          switch (snapshot.state) {
+            case 'paused':
+              console.log('Upload is paused');
+              break;
+            case 'running':
+              console.log('Upload is running');
+              break;
+          }
+        },
+        (error) => {
+          // A full list of error codes is available at
+          // https://firebase.google.com/docs/storage/web/handle-errors
+          switch (error.code) {
+            case 'storage/unauthorized':
+              // User doesn't have permission to access the object
+              break;
+            case 'storage/canceled':
+              // User canceled the upload
+              break;
+
+            // ...
+
+            case 'storage/unknown':
+              // Unknown error occurred, inspect error.serverResponse
+              break;
+          }
+        },
+        () => {
+          getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
+            if (category !== 'default' && user !== null) {
+              await addDoc(collection(db, 'board'), {
+                no: num,
+                title: title,
+                category: category,
+                content: content,
+                time: Date.now(),
+                username: user.displayName,
+                thumbnail: user.photoURL,
+                userid: user.uid,
+                image: downloadURL,
+              });
+              alert('글이 작성되었습니다.');
+              setTitle('');
+              setCategory('');
+              setContent('');
+              window.location.href = '/';
+            } else {
+              alert('게시판을 선택해 주세요.');
+            }
+          });
+        },
+      );
     }
   };
 
@@ -94,7 +164,10 @@ const WritePage = () => {
             <option value="나만의 해장 정보">나만의 해장 정보</option>
             <option value="건의게시판">건의게시판</option>
           </Select>
-          <span className="button">추가</span>
+          <label htmlFor="file" className="button">
+            파일 추가
+          </label>
+          <input type="file" name="file" id="file"></input>
           <input type="submit" className="button" value="등록"></input>
         </Top>
         <Body>
@@ -151,6 +224,10 @@ const Top = styled.div`
     text-align: center;
     background-color: white;
     cursor: pointer;
+  }
+
+  & #file {
+    display: none;
   }
 `;
 
