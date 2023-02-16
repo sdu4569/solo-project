@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import BoardMenu from '../body/BoardMenu';
 import UserInfoArea from '../body/UserInfoArea';
 import WriteAndSearch from '../body/WriteAndSearch';
-import { auth, db } from '../firebase';
+import { auth, db, storage } from '../firebase';
 import {
   collection,
   getDocs,
@@ -14,15 +14,15 @@ import {
   doc,
 } from '@firebase/firestore';
 import { Link, useParams } from 'react-router-dom';
+import { deleteObject, ref } from 'firebase/storage';
 
 const PostDetailPage = () => {
   const user = auth.currentUser;
   let number = useParams();
   const [contents, setContents] = useState<any[]>([]);
   const [comments, setComments] = useState<any[]>([]);
-
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const [value, setValue] = useState<String>();
+  const [value, setValue] = useState<string>();
 
   useEffect(() => {
     if (textareaRef && textareaRef.current) {
@@ -96,12 +96,14 @@ const PostDetailPage = () => {
     const delContent = confirm('글을 삭제하시겠습니까?');
     if (delContent) {
       contents.forEach(async (content) => {
+        console.log(content.imagename);
+        const imageRef = ref(storage, 'image/' + content.imagename);
         await deleteDoc(doc(db, 'board', content.id));
+        deleteObject(imageRef);
       });
       comments.forEach(async (comment) => {
         await deleteDoc(doc(db, 'comment', comment.id));
       });
-
       alert('글이 삭제되었습니다.');
       window.history.back();
     } else {
@@ -133,13 +135,36 @@ const PostDetailPage = () => {
               date.getHours() +
               ':' +
               date.getMinutes();
+            let category: string = '';
+            switch (item.category) {
+              case '공지사항':
+                category = 'notice';
+                break;
+              case '오늘의 혼술 자랑':
+                category = 'boast';
+                break;
+              case '나만의 술 정보':
+                category = 'drink';
+                break;
+              case '나만의 안주 정보':
+                category = 'snack';
+                break;
+              case '나만의 해장 정보':
+                category = 'solution';
+                break;
+              case '건의게시판':
+                category = 'suggest';
+                break;
+            }
 
             if (item.userid === user.uid && item.image == '') {
               return (
                 <AirtlcleContent key={idx}>
                   <ArticleHeader>
                     <ArticleTitle>
-                      <p className="category">{item.category} &gt;</p>
+                      <Link to={`/board/${category}`} className="category">
+                        {item.category} &gt;
+                      </Link>
                       <div className="title">
                         <h3>{item.title}</h3>
                       </div>
@@ -253,7 +278,9 @@ const PostDetailPage = () => {
                 <AirtlcleContent key={idx}>
                   <ArticleHeader>
                     <ArticleTitle>
-                      <p className="category">{item.category} &gt;</p>
+                      <Link to={`/board/${category}`} className="category">
+                        {item.category} &gt;
+                      </Link>
                       <div className="title">
                         <h3>{item.title}</h3>
                       </div>
@@ -368,7 +395,9 @@ const PostDetailPage = () => {
                 <AirtlcleContent key={idx}>
                   <ArticleHeader>
                     <ArticleTitle>
-                      <p className="category">{item.category} &gt;</p>
+                      <Link to={`/board/${category}`} className="category">
+                        {item.category} &gt;
+                      </Link>
                       <div className="title">
                         <h3>{item.title}</h3>
                       </div>
@@ -474,7 +503,9 @@ const PostDetailPage = () => {
                 <AirtlcleContent key={idx}>
                   <ArticleHeader>
                     <ArticleTitle>
-                      <p className="category">{item.category} &gt;</p>
+                      <Link to={`/board/${category}`} className="category">
+                        {item.category} &gt;
+                      </Link>
                       <div className="title">
                         <h3>{item.title}</h3>
                       </div>
@@ -604,12 +635,36 @@ const PostDetailPage = () => {
               date.getHours() +
               ':' +
               date.getMinutes();
+            let category: string = '';
+            switch (item.category) {
+              case '공지사항':
+                category = 'notice';
+                break;
+              case '오늘의 혼술 자랑':
+                category = 'boast';
+                break;
+              case '나만의 술 정보':
+                category = 'drink';
+                break;
+              case '나만의 안주 정보':
+                category = 'snack';
+                break;
+              case '나만의 해장 정보':
+                category = 'solution';
+                break;
+              case '건의게시판':
+                category = 'suggest';
+                break;
+            }
+
             if (item.image == '') {
               return (
                 <AirtlcleContent key={idx}>
                   <ArticleHeader>
                     <ArticleTitle>
-                      <p className="category">{item.category} &gt;</p>
+                      <Link to={`/board/${category}`} className="category">
+                        {item.category} &gt;
+                      </Link>
                       <div className="title">
                         <h3>{item.title}</h3>
                       </div>
@@ -693,7 +748,9 @@ const PostDetailPage = () => {
                 <AirtlcleContent key={idx}>
                   <ArticleHeader>
                     <ArticleTitle>
-                      <p className="category">{item.category} &gt;</p>
+                      <Link to={`/board/${category}`} className="category">
+                        {item.category} &gt;
+                      </Link>
                       <div className="title">
                         <h3>{item.title}</h3>
                       </div>
@@ -835,6 +892,16 @@ const ArticleTitle = styled.div`
 
   & .title {
     margin-top: 7px;
+  }
+
+  & .category {
+    color: green;
+    text-decoration: none;
+    font-size: 13px;
+    margin: 0;
+    :hover {
+      text-decoration: underline;
+    }
   }
 `;
 

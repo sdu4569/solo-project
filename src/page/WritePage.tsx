@@ -52,7 +52,7 @@ const WritePage = () => {
     }
 
     const file: any = document.getElementById('file');
-    let fileInput = file.files[0];
+    const fileInput = file.files[0];
     console.log(fileInput);
     if (fileInput === undefined && user !== null) {
       await addDoc(collection(db, 'board'), {
@@ -121,6 +121,7 @@ const WritePage = () => {
                 thumbnail: user.photoURL,
                 userid: user.uid,
                 image: downloadURL,
+                imagename: fileInput.name,
               });
               alert('글이 작성되었습니다.');
               setTitle('');

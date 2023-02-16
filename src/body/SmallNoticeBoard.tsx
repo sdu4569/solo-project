@@ -1,45 +1,49 @@
+import { useEffect, useState } from 'react';
 import styled from 'styled-components';
+import { db } from '../firebase';
+import { collection, getDocs, query, orderBy } from '@firebase/firestore';
+import { Link } from 'react-router-dom';
 
 const SmallNoticeBoard = () => {
+  const [contents, setContents] = useState<any[]>([]);
+
+  useEffect(() => {
+    const getContents = async () => {
+      const q = query(collection(db, 'board'), orderBy('time', 'asc'));
+      const dbContents = await getDocs(q);
+      dbContents.forEach((doc) => {
+        const contentObject = {
+          ...doc.data(),
+          id: doc.id,
+        };
+        setContents((prev) =>
+          [contentObject, ...prev].filter(
+            (content) => content.category == '공지사항',
+          ),
+        );
+      });
+    };
+    getContents();
+  }, []);
   return (
     <Board>
       <BoardTitle>
         <p>공지사항</p>
-        <button type="button">더보기 &gt;</button>
+        <Link to={'/board/notice'}>
+          <button type="button">더보기 &gt;</button>
+        </Link>
       </BoardTitle>
       <Body>
-        <List>
-          <div>1</div>
-          <p>1.4천</p>
-        </List>
-        <List>
-          <div>1</div>
-          <p>1.4천</p>
-        </List>
-        <List>
-          <div>1</div>
-          <p>1.4천</p>
-        </List>
-        <List>
-          <div>1</div>
-          <p>1.4천</p>
-        </List>
-        <List>
-          <div>1</div>
-          <p>1.4천</p>
-        </List>
-        <List>
-          <div>1</div>
-          <p>1.4천</p>
-        </List>
-        <List>
-          <div>1</div>
-          <p>1.4천</p>
-        </List>
-        <List>
-          <div>1</div>
-          <p>1.4천</p>
-        </List>
+        {contents.slice(0, 7).map((item, idx) => {
+          return (
+            <List key={idx}>
+              <Link to={`/board/${item.no}`}>
+                <div key={idx}>{item.title}</div>
+              </Link>
+              <p>{item.username}</p>
+            </List>
+          );
+        })}
       </Body>
     </Board>
   );
@@ -92,10 +96,14 @@ const Body = styled.ul`
 
 const List = styled.li`
   list-style: square;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
 
   & div {
     display: inline-block;
+    color: black;
+    :hover {
+      text-decoration: underline;
+    }
   }
 
   & p {

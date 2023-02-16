@@ -1,10 +1,38 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import BoardMenu from '../body/BoardMenu';
 import UserInfoArea from '../body/UserInfoArea';
 import WriteAndSearch from '../body/WriteAndSearch';
+import { db } from '../firebase';
+import { collection, getDocs, query, orderBy } from '@firebase/firestore';
+import Pagination from '../body/Pagination';
 
 const BoastBoardPage = () => {
+  const [contents, setContents] = useState<any[]>([]);
+  const [page, setPage] = useState<number>(1);
+  const limit = 5;
+  const offset = (page - 1) * limit;
+
+  useEffect(() => {
+    const getContents = async () => {
+      const q = query(collection(db, 'board'), orderBy('time', 'asc'));
+      const dbContents = await getDocs(q);
+      dbContents.forEach((doc) => {
+        const contentObject = {
+          ...doc.data(),
+          id: doc.id,
+        };
+        setContents((prev) =>
+          [contentObject, ...prev].filter(
+            (content) => content.category == '오늘의 혼술 자랑',
+          ),
+        );
+      });
+    };
+    getContents();
+  }, []);
+
   return (
     <Content>
       <SideArea>
@@ -16,117 +44,78 @@ const BoastBoardPage = () => {
         <Board>
           <h2>오늘의 혼술 자랑</h2>
           <Body>
-            <List>
-              <ContentArea>
-                <div className="con-top">
-                  <Link to="/" className="title">
-                    글 제목
-                  </Link>
-                  <Link to="/" className="content">
-                    글 내용
-                  </Link>
-                </div>
-                <div className="con-bottom">
-                  <div>닉네임</div>
-                  <span className="date">글쓴 시간</span>
-                  <span>조회 수</span>
-                </div>
-              </ContentArea>
-              <div className="con-img">
-                <Link to="/">
-                  <img src="https://via.placeholder.com/120" alt="첨부이미지" />
-                </Link>
-              </div>
-            </List>
-            <List>
-              <ContentArea>
-                <div className="con-top">
-                  <Link to="/" className="title">
-                    글 제목
-                  </Link>
-                  <Link to="/" className="content">
-                    글 내용
-                  </Link>
-                </div>
-                <div className="con-bottom">
-                  <div>닉네임</div>
-                  <span className="date">글쓴 시간</span>
-                  <span>조회 수</span>
-                </div>
-              </ContentArea>
-              <div className="con-img">
-                <Link to="/">
-                  <img src="https://via.placeholder.com/120" alt="첨부이미지" />
-                </Link>
-              </div>
-            </List>
-            <List>
-              <ContentArea>
-                <div className="con-top">
-                  <Link to="/" className="title">
-                    글 제목
-                  </Link>
-                  <Link to="/" className="content">
-                    글 내용
-                  </Link>
-                </div>
-                <div className="con-bottom">
-                  <div>닉네임</div>
-                  <span className="date">글쓴 시간</span>
-                  <span>조회 수</span>
-                </div>
-              </ContentArea>
-              <div className="con-img">
-                <Link to="/">
-                  <img src="https://via.placeholder.com/120" alt="첨부이미지" />
-                </Link>
-              </div>
-            </List>
-            <List>
-              <ContentArea>
-                <div className="con-top">
-                  <Link to="/" className="title">
-                    글 제목
-                  </Link>
-                  <Link to="/" className="content">
-                    글 내용
-                  </Link>
-                </div>
-                <div className="con-bottom">
-                  <div>닉네임</div>
-                  <span className="date">글쓴 시간</span>
-                  <span>조회 수</span>
-                </div>
-              </ContentArea>
-              <div className="con-img">
-                <Link to="/">
-                  <img src="https://via.placeholder.com/120" alt="첨부이미지" />
-                </Link>
-              </div>
-            </List>
-            <List>
-              <ContentArea>
-                <div className="con-top">
-                  <Link to="/" className="title">
-                    글 제목
-                  </Link>
-                  <Link to="/" className="content">
-                    글 내용
-                  </Link>
-                </div>
-                <div className="con-bottom">
-                  <div>닉네임</div>
-                  <span className="date">글쓴 시간</span>
-                  <span>조회 수</span>
-                </div>
-              </ContentArea>
-              <div className="con-img">
-                <Link to="/">
-                  <img src="https://via.placeholder.com/120" alt="첨부이미지" />
-                </Link>
-              </div>
-            </List>
+            {contents.slice(offset, offset + limit).map((item, idx) => {
+              const date = new Date(item.time);
+              let dateFormat =
+                date.getFullYear() +
+                '.' +
+                (date.getMonth() + 1 <= 9
+                  ? '0' + (date.getMonth() + 1)
+                  : date.getMonth() + 1) +
+                '.' +
+                (date.getDate() <= 9 ? '0' + date.getDate() : date.getDate()) +
+                '.' +
+                date.getHours() +
+                ':' +
+                date.getMinutes();
+              if (item.image.length !== 0) {
+                return (
+                  <List key={idx}>
+                    <ContentArea>
+                      <div className="con-top">
+                        <Link to={`/board/${item.no}`} className="title">
+                          {item.title}
+                        </Link>
+                        <Link to={`/board/${item.no}`} className="content">
+                          {item.content}
+                        </Link>
+                      </div>
+                      <div className="con-bottom">
+                        <div>{item.username}</div>
+                        <span className="date">{dateFormat}</span>
+                      </div>
+                    </ContentArea>
+                    <div className="con-img">
+                      <Link to={`/board/${item.no}`}>
+                        <img
+                          src={item.image}
+                          alt="첨부이미지"
+                          className="img"
+                        />
+                      </Link>
+                    </div>
+                  </List>
+                );
+              } else {
+                return (
+                  <List key={idx}>
+                    <ContentArea>
+                      <div className="con-top">
+                        <Link to={`/board/${item.no}`} className="title">
+                          {item.title}
+                        </Link>
+                        <Link to={`/board/${item.no}`} className="content">
+                          {item.content}
+                        </Link>
+                      </div>
+                      <div className="con-bottom">
+                        <div>{item.username}</div>
+                        <span className="date">{dateFormat}</span>
+                      </div>
+                    </ContentArea>
+                  </List>
+                );
+              }
+            })}
           </Body>
+          <footer>
+            <Pagination
+              total={contents.length}
+              limit={limit}
+              page={page}
+              setPage={setPage}
+            />
+          </footer>
         </Board>
       </MainArea>
     </Content>
@@ -197,6 +186,11 @@ const List = styled.li`
     position: absolute;
     top: 28px;
     right: 0;
+
+    & .img {
+      width: 120px;
+      height: 120px;
+    }
   }
 `;
 

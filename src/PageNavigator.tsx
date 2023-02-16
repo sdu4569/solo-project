@@ -7,6 +7,7 @@ import PersonalDrinkPage from './page/PersonalDrinkPage';
 import PersonalSnackPage from './page/PersonalSnackPage';
 import PersonalSolutionPage from './page/PersonalSolutionPage';
 import PostDetailPage from './page/PostDetailPage';
+import SearchPage from './page/SearchPage';
 import SignUpPage from './page/SignUpPage';
 import SuggestPage from './page/SuggestPage';
 import TotalBoardPage from './page/TotalBoardPage';
@@ -26,6 +27,7 @@ const PageNavigator = () => {
       <Route path="/board/suggest" element={<SuggestPage />} />
       <Route path="/board/:id" element={<PostDetailPage />} />
       <Route path="/write" element={<WritePage />} />
+      <Route path="/search" element={<SearchPage />} />
       <Route path="/update/:id" element={<UpdatePage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignUpPage />} />

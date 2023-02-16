@@ -1,56 +1,63 @@
+import { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { BoardTitle } from './SmallNoticeBoard';
+import { db } from '../firebase';
+import { collection, getDocs, query, orderBy } from '@firebase/firestore';
+import { Link } from 'react-router-dom';
 
 const SmallBoastBoard = () => {
+  const [contents, setContents] = useState<any[]>([]);
+
+  useEffect(() => {
+    const getContents = async () => {
+      const q = query(collection(db, 'board'), orderBy('time', 'asc'));
+      const dbContents = await getDocs(q);
+      dbContents.forEach((doc) => {
+        const contentObject = {
+          ...doc.data(),
+          id: doc.id,
+        };
+        setContents((prev) =>
+          [contentObject, ...prev].filter(
+            (content) => content.category == '오늘의 혼술 자랑',
+          ),
+        );
+      });
+    };
+    getContents();
+  }, []);
   return (
     <Board>
       <BoardTitle>
         <p>오늘의 혼술 자랑</p>
-        <button type="button">더보기 &gt;</button>
+        <Link to={'/board/boast'}>
+          <button type="button">더보기 &gt;</button>
+        </Link>
       </BoardTitle>
       <Body>
-        <List>
-          <img src="https://via.placeholder.com/100" alt="첨부이미지" />
-          <p className="title">글제목</p>
-          <p className="nickname">닉네임</p>
-          <p className="date">날짜</p>
-          <p className="views">조회</p>
-        </List>
-        <List>
-          <img src="https://via.placeholder.com/100" alt="첨부이미지" />
-          <p className="title">글제목</p>
-          <p className="nickname">닉네임</p>
-          <p className="date">날짜</p>
-          <p className="views">조회</p>
-        </List>
-        <List>
-          <img src="https://via.placeholder.com/100" alt="첨부이미지" />
-          <p className="title">글제목</p>
-          <p className="nickname">닉네임</p>
-          <p className="date">날짜</p>
-          <p className="views">조회</p>
-        </List>
-        <List>
-          <img src="https://via.placeholder.com/100" alt="첨부이미지" />
-          <p className="title">글제목</p>
-          <p className="nickname">닉네임</p>
-          <p className="date">날짜</p>
-          <p className="views">조회</p>
-        </List>
-        <List>
-          <img src="https://via.placeholder.com/100" alt="첨부이미지" />
-          <p className="title">글제목</p>
-          <p className="nickname">닉네임</p>
-          <p className="date">날짜</p>
-          <p className="views">조회</p>
-        </List>
-        <List>
-          <img src="https://via.placeholder.com/100" alt="첨부이미지" />
-          <p className="title">글제목</p>
-          <p className="nickname">닉네임</p>
-          <p className="date">날짜</p>
-          <p className="views">조회</p>
-        </List>
+        {contents.slice(0, 6).map((item, idx) => {
+          const date = new Date(item.time);
+          let dateFormat =
+            date.getFullYear() +
+            '.' +
+            (date.getMonth() + 1 <= 9
+              ? '0' + (date.getMonth() + 1)
+              : date.getMonth() + 1) +
+            '.' +
+            (date.getDate() <= 9 ? '0' + date.getDate() : date.getDate());
+          return (
+            <List key={idx}>
+              <Link to={`/board/${item.no}`} className="link">
+                <img src={item.image} alt="첨부이미지" />
+                <div key={idx} className="title">
+                  {item.title}
+                </div>
+              </Link>
+              <p className="nickname">{item.username}</p>
+              <p className="date">{dateFormat}</p>
+            </List>
+          );
+        })}
       </Body>
     </Board>
   );
@@ -80,9 +87,23 @@ const List = styled.li`
   width: 30%;
   height: 40%;
   margin-bottom: 10px;
+
+  & img {
+    width: 100px;
+    height: 100px;
+  }
+
+  & .link {
+    text-decoration: none;
+  }
+
   & .title {
     margin: 0;
     font-size: 13px;
+    color: black;
+    :hover {
+      text-decoration: underline;
+    }
   }
 
   & .nickname {

@@ -1,20 +1,28 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
+import { collection, getDocs, query, orderBy } from '@firebase/firestore';
 
 const WriteAndSearch = () => {
-  const [value, setValue] = useState('');
+  const [result, setResult] = useState<string>('');
+  const [contents, setContents] = useState<any[]>([]);
   const user = auth.currentUser;
-  const onChange = (event: React.FormEvent<HTMLInputElement>) => {
-    const {
-      currentTarget: { value },
-    } = event;
-    setValue(value);
+  const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const searchContents = contents.filter(
+      (content) =>
+        content.title.includes(event.target.value) ||
+        content.content.includes(event.target.value),
+    );
+    if (searchContents.length !== 0) {
+      const searchResult = JSON.stringify(searchContents);
+      setResult(searchResult);
+    }
   };
 
-  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = (event: any) => {
     event.preventDefault();
+    window.localStorage.setItem('result', result);
+    window.location.href = '/search';
   };
 
   const handleClick = () => {
@@ -26,20 +34,28 @@ const WriteAndSearch = () => {
     }
   };
 
+  useEffect(() => {
+    const getContents = async () => {
+      const q = query(collection(db, 'board'), orderBy('time', 'asc'));
+      const dbContents = await getDocs(q);
+      dbContents.forEach((doc) => {
+        const contentObject = {
+          ...doc.data(),
+          id: doc.id,
+        };
+        setContents((prev) => [contentObject, ...prev]);
+      });
+    };
+    getContents();
+  }, []);
+
   return (
     <WriteSearch>
-      <Write type="button" onClick={handleClick}>
-        글쓰기
-      </Write>
-      <SearchForm onSubmit={onSubmit}>
-        <Search
-          value={value}
-          onChange={onChange}
-          type="text"
-          placeholder="검색"
-        />
-        <SearchButton type="button">검색</SearchButton>
-      </SearchForm>
+      <Write onClick={handleClick}>글쓰기</Write>
+      <form method="post" onSubmit={onSubmit} className="searchForm">
+        <Search onChange={onChange} type="text" placeholder="검색" required />
+        <input type="submit" value="검색" className="search"></input>
+      </form>
     </WriteSearch>
   );
 };
@@ -50,6 +66,24 @@ const WriteSearch = styled.div`
   height: 100px;
   border-bottom: 2px solid black;
   font-size: 13px;
+
+  & .searchForm {
+    display: flex;
+
+    & .search {
+      width: 40px;
+      height: 29.5px;
+      margin: 0;
+      padding: 0;
+      border: none;
+      background-color: black;
+      color: white;
+      font-size: 13px;
+      :hover {
+        cursor: pointer;
+      }
+    }
+  }
 `;
 
 const Write = styled.button`
@@ -64,10 +98,6 @@ const Write = styled.button`
   cursor: pointer;
 `;
 
-const SearchForm = styled.form`
-  display: flex;
-`;
-
 const Search = styled.input`
   width: 120px;
   height: 30px;
@@ -77,20 +107,6 @@ const Search = styled.input`
   padding-left: 4px;
   :focus {
     outline: none;
-  }
-`;
-
-const SearchButton = styled.button`
-  width: 40px;
-  height: 29.5px;
-  margin: 0;
-  padding: 0;
-  border: none;
-  background-color: black;
-  color: white;
-  font-size: 13px;
-  :hover {
-    cursor: pointer;
   }
 `;
 

@@ -2,37 +2,22 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import BoardMenu from '../body/BoardMenu';
+import Pagination from '../body/Pagination';
 import UserInfoArea from '../body/UserInfoArea';
 import WriteAndSearch from '../body/WriteAndSearch';
-import { db } from '../firebase';
-import { collection, getDocs, query, orderBy } from '@firebase/firestore';
-import Pagination from '../body/Pagination';
 
-const PersonalSolutionPage = () => {
-  const [contents, setContents] = useState<any[]>([]);
+const SearchPage = (): JSX.Element => {
   const [page, setPage] = useState<number>(1);
+  const [array, setArray] = useState<any[]>([]);
   const limit = 5;
   const offset = (page - 1) * limit;
-
+  const resultItem = localStorage.getItem('result');
   useEffect(() => {
-    const getContents = async () => {
-      const q = query(collection(db, 'board'), orderBy('time', 'asc'));
-      const dbContents = await getDocs(q);
-      dbContents.forEach((doc) => {
-        const contentObject = {
-          ...doc.data(),
-          id: doc.id,
-        };
-        setContents((prev) =>
-          [contentObject, ...prev].filter(
-            (content) => content.category == '나만의 해장 정보',
-          ),
-        );
-      });
-    };
-    getContents();
+    if (resultItem !== null) {
+      const resultArr: any[] = JSON.parse(resultItem);
+      setArray(resultArr);
+    }
   }, []);
-
   return (
     <Content>
       <SideArea>
@@ -42,9 +27,9 @@ const PersonalSolutionPage = () => {
       </SideArea>
       <MainArea>
         <Board>
-          <h2>나만의 해장 정보</h2>
+          <h2>검색 결과</h2>
           <Body>
-            {contents.slice(offset, offset + limit).map((item, idx) => {
+            {array.slice(offset, offset + limit).map((item, idx) => {
               const date = new Date(item.time);
               let dateFormat =
                 date.getFullYear() +
@@ -58,9 +43,33 @@ const PersonalSolutionPage = () => {
                 date.getHours() +
                 ':' +
                 date.getMinutes();
+              let category: string = '';
+              switch (item.category) {
+                case '공지사항':
+                  category = 'notice';
+                  break;
+                case '오늘의 혼술 자랑':
+                  category = 'boast';
+                  break;
+                case '나만의 술 정보':
+                  category = 'drink';
+                  break;
+                case '나만의 안주 정보':
+                  category = 'snack';
+                  break;
+                case '나만의 해장 정보':
+                  category = 'solution';
+                  break;
+                case '건의게시판':
+                  category = 'suggest';
+                  break;
+              }
               if (item.image.length !== 0) {
                 return (
                   <List key={idx}>
+                    <Link to={`/board/${category}`} className="category">
+                      {item.category} &gt;
+                    </Link>
                     <ContentArea>
                       <div className="con-top">
                         <Link to={`/board/${item.no}`} className="title">
@@ -89,6 +98,9 @@ const PersonalSolutionPage = () => {
               } else {
                 return (
                   <List key={idx}>
+                    <Link to={`/board/${category}`} className="category">
+                      {item.category} &gt;
+                    </Link>
                     <ContentArea>
                       <div className="con-top">
                         <Link to={`/board/${item.no}`} className="title">
@@ -110,7 +122,7 @@ const PersonalSolutionPage = () => {
           </Body>
           <footer>
             <Pagination
-              total={contents.length}
+              total={array.length}
               limit={limit}
               page={page}
               setPage={setPage}
@@ -172,8 +184,8 @@ const List = styled.li`
   border-bottom: 1px solid #eeeeef;
   position: relative;
 
-  & .board-name {
-    color: #666666;
+  & .category {
+    color: green;
     text-decoration: none;
     font-size: 13px;
     margin: 0;
@@ -184,7 +196,7 @@ const List = styled.li`
 
   & .con-img {
     position: absolute;
-    top: 28px;
+    top: 50px;
     right: 0;
 
     & .img {
@@ -255,4 +267,4 @@ const ContentArea = styled.div`
   }
 `;
 
-export default PersonalSolutionPage;
+export default SearchPage;

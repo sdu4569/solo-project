@@ -6,9 +6,14 @@ import UserInfoArea from '../body/UserInfoArea';
 import WriteAndSearch from '../body/WriteAndSearch';
 import { db } from '../firebase';
 import { collection, getDocs, query, orderBy } from '@firebase/firestore';
+import Pagination from '../body/Pagination';
 
 const NoticeBoardPage = () => {
   const [contents, setContents] = useState<any[]>([]);
+  const [page, setPage] = useState<number>(1);
+  const limit = 5;
+  const offset = (page - 1) * limit;
+
   useEffect(() => {
     const getContents = async () => {
       const q = query(collection(db, 'board'), orderBy('time', 'asc'));
@@ -39,7 +44,7 @@ const NoticeBoardPage = () => {
         <Board>
           <h2>공지사항</h2>
           <Body>
-            {contents.map<any>((item, idx) => {
+            {contents.slice(offset, offset + limit).map((item, idx) => {
               const date = new Date(item.time);
               let dateFormat =
                 date.getFullYear() +
@@ -53,35 +58,64 @@ const NoticeBoardPage = () => {
                 date.getHours() +
                 ':' +
                 date.getMinutes();
-              return (
-                <List key={idx}>
-                  <ContentArea>
-                    <div className="con-top">
-                      <Link to={`/board/${item.no}`} className="title">
-                        {item.title}
-                      </Link>
-                      <Link to="/" className="content">
-                        {item.content}
+              if (item.image.length !== 0) {
+                return (
+                  <List key={idx}>
+                    <ContentArea>
+                      <div className="con-top">
+                        <Link to={`/board/${item.no}`} className="title">
+                          {item.title}
+                        </Link>
+                        <Link to={`/board/${item.no}`} className="content">
+                          {item.content}
+                        </Link>
+                      </div>
+                      <div className="con-bottom">
+                        <div>{item.username}</div>
+                        <span className="date">{dateFormat}</span>
+                      </div>
+                    </ContentArea>
+                    <div className="con-img">
+                      <Link to={`/board/${item.no}`}>
+                        <img
+                          src={item.image}
+                          alt="첨부이미지"
+                          className="img"
+                        />
                       </Link>
                     </div>
-                    <div className="con-bottom">
-                      <div>{item.username}</div>
-                      <span className="date">{dateFormat}</span>
-                      <span>조회 수</span>
-                    </div>
-                  </ContentArea>
-                  <div className="con-img">
-                    <Link to="/">
-                      <img
-                        src="https://via.placeholder.com/120"
-                        alt="첨부이미지"
-                      />
-                    </Link>
-                  </div>
-                </List>
-              );
+                  </List>
+                );
+              } else {
+                return (
+                  <List key={idx}>
+                    <ContentArea>
+                      <div className="con-top">
+                        <Link to={`/board/${item.no}`} className="title">
+                          {item.title}
+                        </Link>
+                        <Link to={`/board/${item.no}`} className="content">
+                          {item.content}
+                        </Link>
+                      </div>
+                      <div className="con-bottom">
+                        <div>{item.username}</div>
+                        <span className="date">{dateFormat}</span>
+                      </div>
+                    </ContentArea>
+                  </List>
+                );
+              }
             })}
           </Body>
+          <footer>
+            <Pagination
+              total={contents.length}
+              limit={limit}
+              page={page}
+              setPage={setPage}
+            />
+          </footer>
         </Board>
       </MainArea>
     </Content>
@@ -152,6 +186,11 @@ const List = styled.li`
     position: absolute;
     top: 28px;
     right: 0;
+
+    & .img {
+      width: 120px;
+      height: 120px;
+    }
   }
 `;
 

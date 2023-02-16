@@ -1,10 +1,35 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import BoardMenu from '../body/BoardMenu';
+import Pagination from '../body/Pagination';
 import UserInfoArea from '../body/UserInfoArea';
 import WriteAndSearch from '../body/WriteAndSearch';
+import { collection, getDocs, query, orderBy } from '@firebase/firestore';
+import { db } from '../firebase';
 
-const TotalBoardPage = () => {
+const TotalBoardPage = (): JSX.Element => {
+  const [page, setPage] = useState<number>(1);
+
+  const limit = 5;
+  const offset = (page - 1) * limit;
+
+  const [contents, setContents] = useState<any[]>([]);
+
+  useEffect(() => {
+    const getContents = async () => {
+      const q = query(collection(db, 'board'), orderBy('time', 'asc'));
+      const dbContents = await getDocs(q);
+      dbContents.forEach((doc) => {
+        const contentObject = {
+          ...doc.data(),
+          id: doc.id,
+        };
+        setContents((prev) => [contentObject, ...prev]);
+      });
+    };
+    getContents();
+  }, []);
   return (
     <Content>
       <SideArea>
@@ -15,134 +40,107 @@ const TotalBoardPage = () => {
       <MainArea>
         <Board>
           <h2>전체글보기</h2>
-          <p>100 개의 글</p>
+          <div className="count">{contents.length}개의 글</div>
           <Body>
-            <List>
-              <Link to="/" className="board-name">
-                오늘의 혼술 자랑
-              </Link>
-              <ContentArea>
-                <div className="con-top">
-                  <Link to="/" className="title">
-                    글 제목
-                  </Link>
-                  <Link to="/" className="content">
-                    글 내용
-                  </Link>
-                </div>
-                <div className="con-bottom">
-                  <div>닉네임</div>
-                  <span className="date">글쓴 시간</span>
-                  <span>조회 수</span>
-                </div>
-              </ContentArea>
-              <div className="con-img">
-                <Link to="/">
-                  <img src="https://via.placeholder.com/120" alt="첨부이미지" />
-                </Link>
-              </div>
-            </List>
-            <List>
-              <Link to="/" className="board-name">
-                오늘의 혼술 자랑
-              </Link>
-              <ContentArea>
-                <div className="con-top">
-                  <Link to="/" className="title">
-                    글 제목
-                  </Link>
-                  <Link to="/" className="content">
-                    글 내용
-                  </Link>
-                </div>
-                <div className="con-bottom">
-                  <div>닉네임</div>
-                  <span className="date">글쓴 시간</span>
-                  <span>조회 수</span>
-                </div>
-              </ContentArea>
-              <div className="con-img">
-                <Link to="/">
-                  <img src="https://via.placeholder.com/120" alt="첨부이미지" />
-                </Link>
-              </div>
-            </List>
-            <List>
-              <Link to="/" className="board-name">
-                오늘의 혼술 자랑
-              </Link>
-              <ContentArea>
-                <div className="con-top">
-                  <Link to="/" className="title">
-                    글 제목
-                  </Link>
-                  <Link to="/" className="content">
-                    글 내용
-                  </Link>
-                </div>
-                <div className="con-bottom">
-                  <div>닉네임</div>
-                  <span className="date">글쓴 시간</span>
-                  <span>조회 수</span>
-                </div>
-              </ContentArea>
-              <div className="con-img">
-                <Link to="/">
-                  <img src="https://via.placeholder.com/120" alt="첨부이미지" />
-                </Link>
-              </div>
-            </List>
-            <List>
-              <Link to="/" className="board-name">
-                오늘의 혼술 자랑
-              </Link>
-              <ContentArea>
-                <div className="con-top">
-                  <Link to="/" className="title">
-                    글 제목
-                  </Link>
-                  <Link to="/" className="content">
-                    글 내용
-                  </Link>
-                </div>
-                <div className="con-bottom">
-                  <div>닉네임</div>
-                  <span className="date">글쓴 시간</span>
-                  <span>조회 수</span>
-                </div>
-              </ContentArea>
-              <div className="con-img">
-                <Link to="/">
-                  <img src="https://via.placeholder.com/120" alt="첨부이미지" />
-                </Link>
-              </div>
-            </List>
-            <List>
-              <Link to="/" className="board-name">
-                오늘의 혼술 자랑
-              </Link>
-              <ContentArea>
-                <div className="con-top">
-                  <Link to="/" className="title">
-                    글 제목
-                  </Link>
-                  <Link to="/" className="content">
-                    글 내용
-                  </Link>
-                </div>
-                <div className="con-bottom">
-                  <div>닉네임</div>
-                  <span className="date">글쓴 시간</span>
-                  <span>조회 수</span>
-                </div>
-              </ContentArea>
-              <div className="con-img">
-                <Link to="/">
-                  <img src="https://via.placeholder.com/120" alt="첨부이미지" />
-                </Link>
-              </div>
-            </List>
+            {contents.slice(offset, offset + limit).map((item, idx) => {
+              const date = new Date(item.time);
+              let dateFormat =
+                date.getFullYear() +
+                '.' +
+                (date.getMonth() + 1 <= 9
+                  ? '0' + (date.getMonth() + 1)
+                  : date.getMonth() + 1) +
+                '.' +
+                (date.getDate() <= 9 ? '0' + date.getDate() : date.getDate()) +
+                '.' +
+                date.getHours() +
+                ':' +
+                date.getMinutes();
+              let category: string = '';
+              switch (item.category) {
+                case '공지사항':
+                  category = 'notice';
+                  break;
+                case '오늘의 혼술 자랑':
+                  category = 'boast';
+                  break;
+                case '나만의 술 정보':
+                  category = 'drink';
+                  break;
+                case '나만의 안주 정보':
+                  category = 'snack';
+                  break;
+                case '나만의 해장 정보':
+                  category = 'solution';
+                  break;
+                case '건의게시판':
+                  category = 'suggest';
+                  break;
+              }
+              if (item.image.length !== 0) {
+                return (
+                  <List key={idx}>
+                    <Link to={`/board/${category}`} className="category">
+                      {item.category} &gt;
+                    </Link>
+                    <ContentArea>
+                      <div className="con-top">
+                        <Link to={`/board/${item.no}`} className="title">
+                          {item.title}
+                        </Link>
+                        <Link to={`/board/${item.no}`} className="content">
+                          {item.content}
+                        </Link>
+                      </div>
+                      <div className="con-bottom">
+                        <div>{item.username}</div>
+                        <span className="date">{dateFormat}</span>
+                      </div>
+                    </ContentArea>
+                    <div className="con-img">
+                      <Link to={`/board/${item.no}`}>
+                        <img
+                          src={item.image}
+                          alt="첨부이미지"
+                          className="img"
+                        />
+                      </Link>
+                    </div>
+                  </List>
+                );
+              } else {
+                return (
+                  <List key={idx}>
+                    <Link to={`/board/${category}`} className="category">
+                      {item.category} &gt;
+                    </Link>
+                    <ContentArea>
+                      <div className="con-top">
+                        <Link to={`/board/${item.no}`} className="title">
+                          {item.title}
+                        </Link>
+                        <Link to={`/board/${item.no}`} className="content">
+                          {item.content}
+                        </Link>
+                      </div>
+                      <div className="con-bottom">
+                        <div>{item.username}</div>
+                        <span className="date">{dateFormat}</span>
+                      </div>
+                    </ContentArea>
+                  </List>
+                );
+              }
+            })}
           </Body>
+          <footer>
+            <Pagination
+              total={contents.length}
+              limit={limit}
+              page={page}
+              setPage={setPage}
+            />
+          </footer>
         </Board>
       </MainArea>
     </Content>
@@ -178,13 +176,12 @@ const Board = styled.div`
   & h2 {
     margin: 0;
     font-size: 22px;
+    padding-bottom: 10px;
   }
 
-  & p {
-    font-size: 13px;
-    padding: 6px 0 10px;
+  & .count {
+    padding-bottom: 10px;
     border-bottom: 1px solid black;
-    margin: 0;
   }
 `;
 
@@ -204,8 +201,8 @@ const List = styled.li`
   border-bottom: 1px solid #eeeeef;
   position: relative;
 
-  & .board-name {
-    color: #666666;
+  & .category {
+    color: green;
     text-decoration: none;
     font-size: 13px;
     margin: 0;
@@ -218,6 +215,11 @@ const List = styled.li`
     position: absolute;
     top: 50px;
     right: 0;
+
+    & .img {
+      width: 120px;
+      height: 120px;
+    }
   }
 `;
 
@@ -228,7 +230,7 @@ const ContentArea = styled.div`
 
   margin-top: 12px;
   & .title {
-    display: block;
+    display: black;
     color: black;
     text-decoration: none;
     font-size: 16px;

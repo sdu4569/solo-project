@@ -1,9 +1,12 @@
+import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 const Title = () => {
   return (
     <StyledTitle>
-      <Image src="/image/Title.jpg" alt="타이틀 이미지"></Image>
+      <Link to={'/'}>
+        <Image src="/image/Title.jpg" alt="타이틀 이미지"></Image>
+      </Link>
     </StyledTitle>
   );
 };
