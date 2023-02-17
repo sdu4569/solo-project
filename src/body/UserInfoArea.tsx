@@ -2,12 +2,19 @@ import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useDbContext } from '../context/AuthContext';
+import { collection, getDocs, query, orderBy } from '@firebase/firestore';
+import { db } from '../firebase';
 
 const UserInfoArea = () => {
   const user = auth.currentUser;
 
   if (user !== null) {
+    const contents = useDbContext().filter(
+      (content) => content.userid == user.uid,
+    );
+    const [comments, setComments] = useState<any[]>([]);
     useEffect(() => {
       const LogOut = document.getElementById('LogOut') as HTMLElement;
       if (LogOut) {
@@ -20,6 +27,26 @@ const UserInfoArea = () => {
           });
         });
       }
+
+      const getComments = async () => {
+        const qComment = query(
+          collection(db, 'comment'),
+          orderBy('time', 'desc'),
+        );
+        const dbComments = await getDocs(qComment);
+        dbComments.forEach((doc) => {
+          const commentObject = {
+            ...doc.data(),
+            id: doc.id,
+          };
+          setComments((prev) =>
+            [commentObject, ...prev].filter(
+              (comment) => comment.username == user.displayName,
+            ),
+          );
+        });
+      };
+      getComments();
     }, []);
 
     const photo = user.photoURL;
@@ -40,16 +67,12 @@ const UserInfoArea = () => {
         <div className="createDate">가입일 {dateFormat}</div>
         <Count>
           <div>
-            <span>방문</span>
-            <span>0회</span>
-          </div>
-          <div>
             <span>내가 쓴 글</span>
-            <span>0개</span>
+            <span>{contents.length}개</span>
           </div>
           <div>
             <span>내가 쓴 댓글</span>
-            <span>0개</span>
+            <span>{comments.length}개</span>
           </div>
         </Count>
         <LogOut id="LogOut">로그아웃</LogOut>
@@ -160,10 +183,10 @@ const Count = styled.div`
   flex-direction: column;
   justify-content: space-between;
   width: 80%;
-  height: 70px;
+  height: 50px;
   margin-left: auto;
   margin-right: auto;
-  margin-top: 30px;
+  margin-top: 40px;
 
   & div {
     display: flex;

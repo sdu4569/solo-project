@@ -1,30 +1,13 @@
-import { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { db } from '../firebase';
-import { collection, getDocs, query, orderBy } from '@firebase/firestore';
+
 import { Link } from 'react-router-dom';
+import { useDbContext } from '../context/AuthContext';
 
 const SmallNoticeBoard = () => {
-  const [contents, setContents] = useState<any[]>([]);
+  const contents = useDbContext().filter(
+    (content) => content.category == '공지사항',
+  );
 
-  useEffect(() => {
-    const getContents = async () => {
-      const q = query(collection(db, 'board'), orderBy('time', 'asc'));
-      const dbContents = await getDocs(q);
-      dbContents.forEach((doc) => {
-        const contentObject = {
-          ...doc.data(),
-          id: doc.id,
-        };
-        setContents((prev) =>
-          [contentObject, ...prev].filter(
-            (content) => content.category == '공지사항',
-          ),
-        );
-      });
-    };
-    getContents();
-  }, []);
   return (
     <Board>
       <BoardTitle>

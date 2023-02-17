@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from '@firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import { useState } from 'react';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyB17p5zNCw84JaAeVmZd90BqZBEramaXro',

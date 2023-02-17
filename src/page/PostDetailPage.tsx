@@ -15,11 +15,12 @@ import {
 } from '@firebase/firestore';
 import { Link, useParams } from 'react-router-dom';
 import { deleteObject, ref } from 'firebase/storage';
+import { useDbContext } from '../context/AuthContext';
 
 const PostDetailPage = () => {
   const user = auth.currentUser;
   let number = useParams();
-  const [contents, setContents] = useState<any[]>([]);
+  const contents = useDbContext().filter((content) => content.no == number.id);
   const [comments, setComments] = useState<any[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [value, setValue] = useState<string>();
@@ -33,21 +34,6 @@ const PostDetailPage = () => {
   }, [value]);
 
   useEffect(() => {
-    const getContents = async () => {
-      const qBoard = query(collection(db, 'board'));
-      const dbContents = await getDocs(qBoard);
-      dbContents.forEach((doc) => {
-        const contentObject = {
-          ...doc.data(),
-          id: doc.id,
-        };
-        setContents((prev) =>
-          [contentObject, ...prev].filter((content) => content.no == number.id),
-        );
-      });
-    };
-    getContents();
-
     const getComments = async () => {
       const qComment = query(
         collection(db, 'comment'),
@@ -124,7 +110,8 @@ const PostDetailPage = () => {
           {contents.map((item, idx) => {
             let date = new Date(item.time);
             let dateFormat =
-              date.getFullYear() +
+              date.getFullYear() -
+              2000 +
               '.' +
               (date.getMonth() + 1 <= 9
                 ? '0' + (date.getMonth() + 1)
@@ -132,9 +119,11 @@ const PostDetailPage = () => {
               '.' +
               (date.getDate() <= 9 ? '0' + date.getDate() : date.getDate()) +
               '.' +
-              date.getHours() +
+              (date.getHours() <= 9 ? '0' + date.getHours() : date.getHours()) +
               ':' +
-              date.getMinutes();
+              (date.getMinutes() <= 9
+                ? '0' + date.getMinutes()
+                : date.getMinutes());
             let category: string = '';
             switch (item.category) {
               case '공지사항':

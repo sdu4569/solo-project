@@ -1,31 +1,13 @@
-import { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { BoardTitle } from './SmallNoticeBoard';
-import { db } from '../firebase';
-import { collection, getDocs, query, orderBy } from '@firebase/firestore';
 import { Link } from 'react-router-dom';
+import { useDbContext } from '../context/AuthContext';
 
 const SmallBoastBoard = () => {
-  const [contents, setContents] = useState<any[]>([]);
+  const contents = useDbContext().filter(
+    (content) => content.category == '오늘의 혼술 자랑',
+  );
 
-  useEffect(() => {
-    const getContents = async () => {
-      const q = query(collection(db, 'board'), orderBy('time', 'asc'));
-      const dbContents = await getDocs(q);
-      dbContents.forEach((doc) => {
-        const contentObject = {
-          ...doc.data(),
-          id: doc.id,
-        };
-        setContents((prev) =>
-          [contentObject, ...prev].filter(
-            (content) => content.category == '오늘의 혼술 자랑',
-          ),
-        );
-      });
-    };
-    getContents();
-  }, []);
   return (
     <Board>
       <BoardTitle>
@@ -38,7 +20,8 @@ const SmallBoastBoard = () => {
         {contents.slice(0, 6).map((item, idx) => {
           const date = new Date(item.time);
           let dateFormat =
-            date.getFullYear() +
+            date.getFullYear() -
+            2000 +
             '.' +
             (date.getMonth() + 1 <= 9
               ? '0' + (date.getMonth() + 1)

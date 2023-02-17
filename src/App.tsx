@@ -3,15 +3,18 @@ import Title from './header/Title';
 import GlobalStyle from './GlobalStyle';
 import { BrowserRouter } from 'react-router-dom';
 import PageNavigator from './PageNavigator';
+import { ContextProvider } from './context/AuthContext';
 
 function App() {
   return (
     <BrowserRouter>
-      <GlobalStyle />
-      <PageBody>
-        <Title />
-        <PageNavigator />
-      </PageBody>
+      <ContextProvider>
+        <GlobalStyle />
+        <PageBody>
+          <Title />
+          <PageNavigator />
+        </PageBody>
+      </ContextProvider>
     </BrowserRouter>
   );
 }

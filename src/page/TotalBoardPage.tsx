@@ -1,35 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import BoardMenu from '../body/BoardMenu';
 import Pagination from '../body/Pagination';
 import UserInfoArea from '../body/UserInfoArea';
 import WriteAndSearch from '../body/WriteAndSearch';
-import { collection, getDocs, query, orderBy } from '@firebase/firestore';
-import { db } from '../firebase';
+import { useDbContext } from '../context/AuthContext';
 
 const TotalBoardPage = (): JSX.Element => {
+  const contents = useDbContext();
   const [page, setPage] = useState<number>(1);
-
   const limit = 5;
   const offset = (page - 1) * limit;
 
-  const [contents, setContents] = useState<any[]>([]);
-
-  useEffect(() => {
-    const getContents = async () => {
-      const q = query(collection(db, 'board'), orderBy('time', 'asc'));
-      const dbContents = await getDocs(q);
-      dbContents.forEach((doc) => {
-        const contentObject = {
-          ...doc.data(),
-          id: doc.id,
-        };
-        setContents((prev) => [contentObject, ...prev]);
-      });
-    };
-    getContents();
-  }, []);
   return (
     <Content>
       <SideArea>
@@ -45,7 +28,8 @@ const TotalBoardPage = (): JSX.Element => {
             {contents.slice(offset, offset + limit).map((item, idx) => {
               const date = new Date(item.time);
               let dateFormat =
-                date.getFullYear() +
+                date.getFullYear() -
+                2000 +
                 '.' +
                 (date.getMonth() + 1 <= 9
                   ? '0' + (date.getMonth() + 1)
@@ -53,9 +37,13 @@ const TotalBoardPage = (): JSX.Element => {
                 '.' +
                 (date.getDate() <= 9 ? '0' + date.getDate() : date.getDate()) +
                 '.' +
-                date.getHours() +
+                (date.getHours() <= 9
+                  ? '0' + date.getHours()
+                  : date.getHours()) +
                 ':' +
-                date.getMinutes();
+                (date.getMinutes() <= 9
+                  ? '0' + date.getMinutes()
+                  : date.getMinutes());
               let category: string = '';
               switch (item.category) {
                 case '공지사항':

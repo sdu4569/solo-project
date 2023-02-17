@@ -32,7 +32,8 @@ const SearchPage = (): JSX.Element => {
             {array.slice(offset, offset + limit).map((item, idx) => {
               const date = new Date(item.time);
               let dateFormat =
-                date.getFullYear() +
+                date.getFullYear() -
+                2000 +
                 '.' +
                 (date.getMonth() + 1 <= 9
                   ? '0' + (date.getMonth() + 1)
@@ -40,9 +41,13 @@ const SearchPage = (): JSX.Element => {
                 '.' +
                 (date.getDate() <= 9 ? '0' + date.getDate() : date.getDate()) +
                 '.' +
-                date.getHours() +
+                (date.getHours() <= 9
+                  ? '0' + date.getHours()
+                  : date.getHours()) +
                 ':' +
-                date.getMinutes();
+                (date.getMinutes() <= 9
+                  ? '0' + date.getMinutes()
+                  : date.getMinutes());
               let category: string = '';
               switch (item.category) {
                 case '공지사항':

@@ -1,27 +1,11 @@
-import { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { BoardTitle } from './SmallNoticeBoard';
-import { db } from '../firebase';
-import { collection, getDocs, query, orderBy } from '@firebase/firestore';
 import { Link } from 'react-router-dom';
+import { useDbContext } from '../context/AuthContext';
 
 const SmallTotalBoard = () => {
-  const [contents, setContents] = useState<any[]>([]);
+  const contents = useDbContext();
 
-  useEffect(() => {
-    const getContents = async () => {
-      const q = query(collection(db, 'board'), orderBy('time', 'asc'));
-      const dbContents = await getDocs(q);
-      dbContents.forEach((doc) => {
-        const contentObject = {
-          ...doc.data(),
-          id: doc.id,
-        };
-        setContents((prev) => [contentObject, ...prev]);
-      });
-    };
-    getContents();
-  }, []);
   return (
     <Board>
       <BoardTitle>
@@ -34,7 +18,8 @@ const SmallTotalBoard = () => {
         {contents.slice(0, 9).map((item, idx) => {
           const date = new Date(item.time);
           let dateFormat =
-            date.getFullYear() +
+            date.getFullYear() -
+            2000 +
             '.' +
             (date.getMonth() + 1 <= 9
               ? '0' + (date.getMonth() + 1)
