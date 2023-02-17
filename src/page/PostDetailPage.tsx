@@ -69,7 +69,7 @@ const PostDetailPage = () => {
     };
     getComments();
   }, []);
-
+  console.log(contents);
   const [comment, setComment] = useState('');
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -95,19 +95,21 @@ const PostDetailPage = () => {
     setValue(value);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async (e: any) => {
+    e.preventDefault();
     const delContent = confirm('글을 삭제하시겠습니까?');
     if (delContent) {
-      contents.forEach(async (content) => {
-        const imageRef = ref(storage, 'image/' + content.imagename);
-        await deleteDoc(doc(db, 'board', content.id));
-        deleteObject(imageRef);
-      });
-      comments.forEach(async (comment) => {
-        await deleteDoc(doc(db, 'comment', comment.id));
-      });
+      const docRef = doc(db, 'board', contents[0].id);
+      await deleteDoc(docRef);
+
+      const imageRef = ref(storage, 'image/' + contents[0].imagename);
+      await deleteObject(imageRef);
+
+      const commentRef = doc(db, 'comment', contents[0].id);
+      await deleteDoc(commentRef);
+
       alert('글이 삭제되었습니다.');
-      window.history.back();
+      window.location.href = '/';
     } else {
       alert('취소되었습니다.');
     }

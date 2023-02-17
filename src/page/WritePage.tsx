@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { auth, db, storage } from '../firebase';
-import { addDoc, collection, getDocs, query } from '@firebase/firestore';
+import {
+  addDoc,
+  collection,
+  getDocs,
+  query,
+  orderBy,
+} from '@firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 const WritePage = () => {
@@ -12,6 +18,7 @@ const WritePage = () => {
   const [num, setNum] = useState(0);
   const [value, setValue] = useState<String>('');
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const [contents, setContents] = useState<any[]>([]);
 
   const onChangeTitle = (e: React.ChangeEvent<HTMLInputElement>) => {
     const {
@@ -37,12 +44,24 @@ const WritePage = () => {
 
   useEffect(() => {
     const getContents = async () => {
-      const q = query(collection(db, 'board'));
+      const q = query(collection(db, 'board'), orderBy('no', 'asc'));
       const dbContents = await getDocs(q);
-      setNum(dbContents.docs.length + 1);
+      dbContents.forEach((doc) => {
+        const contentObject = {
+          ...doc.data(),
+          id: doc.id,
+        };
+        setContents((prev) => [contentObject, ...prev]);
+      });
     };
     getContents();
   }, []);
+
+  useEffect(() => {
+    if (contents.length !== 0) {
+      setNum(contents[0].no + 1);
+    }
+  }, [contents]);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
