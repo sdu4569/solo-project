@@ -20,7 +20,7 @@ import { useDbContext } from '../context/AuthContext';
 const PostDetailPage = () => {
   const user = auth.currentUser;
   let number = useParams();
-  const contents = useDbContext().filter((content) => content.no == number.id);
+  const [contents, setContents] = useState<any[]>([]);
   const [comments, setComments] = useState<any[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [value, setValue] = useState<string>();
@@ -35,6 +35,23 @@ const PostDetailPage = () => {
 
   useEffect(() => {
     const getComments = async () => {
+      const getContents = async () => {
+        const q = query(collection(db, 'board'), orderBy('time', 'asc'));
+        const dbContents = await getDocs(q);
+        dbContents.forEach((doc) => {
+          const contentObject = {
+            ...doc.data(),
+            id: doc.id,
+          };
+          setContents((prev) =>
+            [contentObject, ...prev].filter(
+              (content) => content.no == number.id,
+            ),
+          );
+        });
+      };
+      getContents();
+
       const qComment = query(
         collection(db, 'comment'),
         orderBy('time', 'desc'),
@@ -82,7 +99,6 @@ const PostDetailPage = () => {
     const delContent = confirm('글을 삭제하시겠습니까?');
     if (delContent) {
       contents.forEach(async (content) => {
-        console.log(content.imagename);
         const imageRef = ref(storage, 'image/' + content.imagename);
         await deleteDoc(doc(db, 'board', content.id));
         deleteObject(imageRef);

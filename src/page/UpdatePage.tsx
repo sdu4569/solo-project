@@ -98,11 +98,7 @@ const UpdatePage = () => {
       <h2>글수정</h2>
       <form method="post" onSubmit={onSubmit}>
         <Top>
-          <Select
-            name="cateogry"
-            defaultValue={category}
-            onChange={onChangeCategory}
-          >
+          <Select name="cateogry" value={category} onChange={onChangeCategory}>
             <option value="default" disabled>
               게시판을 선택해 주세요.
             </option>
