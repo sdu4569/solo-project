@@ -1,8 +1,7 @@
 import styled from 'styled-components';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth, db } from '../firebase';
-import { addDoc, collection, getDocs, query } from '@firebase/firestore';
+import { auth } from '../firebase';
 
 const SignUpPage = () => {
   useEffect(() => {

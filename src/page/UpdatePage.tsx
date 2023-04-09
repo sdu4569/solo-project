@@ -55,10 +55,10 @@ const UpdatePage = () => {
           [contentObject, ...prev].filter((content) => content.no == number.id),
         );
       });
-      console.log(contents);
     };
     getContents();
   }, []);
+
   useEffect(() => {
     if (contents.length !== 0) {
       setCategory(contents[0].category);
@@ -66,6 +66,7 @@ const UpdatePage = () => {
       setContent(contents[0].content);
     }
   }, [contents]);
+
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (category !== 'default' && user !== null) {
